@@ -1,0 +1,24 @@
+<div style="padding: 20px; font-family: serif; max-width: 800px; margin: auto">
+  <h1>{{ title }}</h1>
+
+  <div>
+    <input
+      type="text"
+      name="notification"
+      id="notification"
+      [(ngModel)]="newMessage"
+      placeholder="Escribe tu notificación ..."
+      (keyup.enter)="sendNotification()"
+    />
+    <button (click)="sendNotification()">Enviar notificación</button>
+  </div>
+
+  <h2>Notificaciones enviadas</h2>
+  <ul>
+    <li *ngIf="notifications.length === 0">Aún no hay notificaciones</li>
+    <li *ngFor="let notificacion of notifications">
+      <strong>{{ notificacion.timestamp | date:'short' }}</strong> |
+      <span>{{ notificacion.message }}</span>
+    </li>
+  </ul>
+</div>

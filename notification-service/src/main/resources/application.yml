@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+# application
+  application:
+    name: notification-service
+    title: Service de Notificaciones - LAB
+    version: v1.0
+    author: Alejandro Fuentes - alefuentes.edu
+
+# PostgreSQL
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ho-sp-db-sc-notification
+    username: admin
+    password: admin
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# ActiveMQ
+  activemq:
+    broker-url: tcp://localhost:61616
+    user: admin
+    password: admin
+
+# RabbitMQ
+  rabbitmq:
+    host: localhost
+    username: guest
+    password: guest
+
+# kafka
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notification-group
+
+# Topics/Queue
+app:
+  messaging:
+    topic:
+      activemq: notification.queue
+      rabbitmq: notification.exchange
+      kafka: notification.topic
+    routingkey:
+      rabbitmq: notification-key
+
+
