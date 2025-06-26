@@ -5,7 +5,7 @@
 ᵇʸ ᴬˡᵉᶠᵘᵉⁿᵗᵉˢ
 ```
 # SPRING | Múltiples Brokers
-<img src="https://img.shields.io/badge/Spring-informational?style=flat-square&logo=spring&logoColor=6db33f&color=ffffff" /> <img src="https://img.shields.io/badge/Redis-informational?style=flat-square&logo=redis&logoColor=ff4438&color=ffffff" /> <img src="https://img.shields.io/badge/Kafka-informational?style=flat-square&logo=apachekafka&logoColor=231f20&color=ffffff" /> <img src="https://img.shields.io/badge/RabbitMQ-informational?style=flat-square&logo=rabbitmq&logoColor=ff6600&color=ffffff" /> <img src="https://img.shields.io/badge/ActiveMQ-informational?style=flat-square&color=ffffff" /> <img src="https://img.shields.io/badge/Docker-informational?style=flat-square&logo=docker&logoColor=2496ed&color=ffffff" />
+<img src="https://img.shields.io/badge/Spring-informational?style=flat-square&logo=spring&logoColor=6db33f&color=ffffff" /> <img src="https://img.shields.io/badge/Mav-informational?style=flat-square&logo=apachemaven&logoColor=c71a36&color=ffffff" /> <img src="https://img.shields.io/badge/Redis-informational?style=flat-square&logo=redis&logoColor=ff4438&color=ffffff" /> <img src="https://img.shields.io/badge/Kafka-informational?style=flat-square&logo=apachekafka&logoColor=231f20&color=ffffff" /> <img src="https://img.shields.io/badge/RabbitMQ-informational?style=flat-square&logo=rabbitmq&logoColor=ff6600&color=ffffff" /> <img src="https://img.shields.io/badge/ActiveMQ-informational?style=flat-square&color=ffffff" /> <img src="https://img.shields.io/badge/Docker-informational?style=flat-square&logo=docker&logoColor=2496ed&color=ffffff" />
 
 <img src="https://img.shields.io/badge/Dev-Alejandro.Fuentes-informational?style=flat-square&logoColor=white&color=cdcdcd" />
 
@@ -14,7 +14,17 @@ Este proyecto es una aplicación fullstack (Java/Angular) de ejemplo que demuest
 
 El objetivo principal es servir a un laboratorio práctico (hands-on lab) para entender y comparar la integración de `ActiveMQ`, `RabbitMQ` y `Kafka` en un ecosistema de Sprint Boot y Angular.
 
+## Arquitectura del proyecto
 
+El flujo de datos es la siguiente
+
+1. frontend | angular : el usuário interactua con la interfaz web para escribir una notifición.
+2. API REST | spring boot : recibe la solicitación POST del frontend.
+3. Lógica de Negócio | sprint boot : <br>
+    -> `NotificacionController` recibe la solicitacion <br>
+    -> `NotificacionService` persiste los datos en PostgreSQL <br>
+    -> inmediatamente después, se envia a los 3 brokes (producers) `ActiveMQ`, `RabbitMQ` y `Kafka`. 
+4. Consumer | spring boot : los responsábles de escuchar o consumir los mensajes, imprimen en la consola del backend.
 
 ```mermaid
 graph TD
@@ -62,101 +72,43 @@ graph TD
     CON -- "5. Imprime log" --> LOGS
 ```
 
-## Subiendo los contenedores Docker
 
-para subir las instancias dockers
+## Utilizar el proyecto
+
+1- clonar el proyecto en su ambiente local
+```bash
+git clone https://github.com/ale-fuentes-ar/interview-spring-multibrokers.git
+cd interview-spring-multibrokers
+```
+
+2- levantar las instancias dockers
 ```bash
 docker-compose up -d
 ```
 
-para finalizar las instancias dockers.
+3- ejecutar el backend.
+> ☕︎ `-DskipTests` para evitar ejecutar la fase de pruebas que requiere un entorno específico.
+```bash
+cd notification-service
+./mvnw spring-boot:run -DskipTests
+```
+
+4- ejecutar el frontend
+> ☕︎ `--legacy-peer-deps` debido a la diferencia de versiones entre el proyecto Angular antiguo y un posible Node.js mas moderno.
+```bash
+cd notification-front
+npm install --legacy-peer-deps
+ng serve
+```
+
+5- testar 
+
+* Abre tu navegador y ve a http://localhost:4200.
+* Escribe un mensaje en el campo de texto y haz clic en "Enviar Notificación".
+* Observa el frontend: Tu mensaje aparecerá en la lista.
+* Observa la consola del backend: Verás los tres mensajes de los consumidores, confirmando que el ciclo completo ha funcionado.
+
+6- para finalizar las instancias dockers.
 ```bash
 docker-compose down
 ```
-
-## Verificar los contenedores
-
-### Testando container | POSTGRES
-Verificar los logs
-```bash
-docker-compose logs postgres
-```
-Verificar desde dentro del contenedor 
-```
-# verificar el nombre del contenedor postgres -> ho-sp-db-postgres
-docker ps
-
-# conectar al contenedor
-docker -it ho-sp-db-postgres psql -U admin -d ho-sp-db-sc-notification
-```
-
-> ☕︎ explicando el comando: <br>
-> `docker exec`: Ejecuta un comando en un contenedor en ejecución. <br>
-> `-it`: Modos interactivo (-i) y TTY (-t), que te permiten interactuar con el comando. <br>
-> `ho-sp-db-postgres`: El nombre de nuestro contenedor. <br>
-> `psql -U admin -d ho-sp-db-sc-notification`: El comando a ejecutar dentro del contenedor.<br>
-> * `psql` es el cliente, 
-> * `-U admin` especifica el usuario y 
-> * `-d ho-sp-db-sc-notification` especifica la base de datos a la que te quieres conectar. <br>
-
-
-### Testando container | ACTIVEMQ
-
-Verificar los logs
-```bash
-docker-compose logs activemq
-```
-Verificar desde dentro del contenedor 
-```
-# verificar el nombre del contenedor activemq -> ho-sp-broker-activemq
-docker ps
-```
-Si esta todo bien, podemos utilizar la url `http://localhost:8161`
-
-> ☕︎ al tentar usar el teste via http, te pedirá un usuario y una contraseña. Para la imagen de Docker que estamos usando (rmohr/activemq), las credenciales por defecto son: <br> 
-> * Usuario: admin
-> * Contraseña: admin
-
-### Testando container | KAFKA
-
-> ☕︎ en versiones mas actuales no será utilizado ZooKeeper
-
-Kafka utiliza en su arquitectura para gestion el ZooKeeper, es por eso que al testar KAFKA, verificaremos el Zookeeper esté ejecutado.
-
-**Testando Zookeeper**
-```bash
-# verificar el log
-docker-compose logs zookeeper
-
-# conectar a la consola zookeeper
-docker exec -it ho-sp-broker-zookeeper zookeeper-shell localhost:2181
-```
-
-> ☕︎ dentro de la consola se puede ejecutar el comando `ls /` para ver todos los directorios creados
-
-**Testando Kafka**
-
-```bash
-# verificar el contenedor de kafka
-docker-compose ps
-
-# verificar el log
-docker-compose logs kafka
-```
-
-Para testar `producer` y `consumer` en kafka
-
-en el primer bash (bash-1), ejectuar :
-```bash
-# conectar a um `producer`
-docker exec -it ho-sp-broker-kafka //usr/bin/kafka-console-producer --bootstrap-server localhost:29092 --topic notification.topic
-```
-
-en otro bash (bash-2), ejectuar :
-```bash
-# conectar a um `consumer`
-docker exec -it ho-sp-broker-kafka //usr/bin/kafka-console-consumer --bootstrap-server localhost:29092 --topic notification.topic
-```
-
-para testar escribir un mensage en el bash-1, y debera reflectirse en el bash-2.
-
