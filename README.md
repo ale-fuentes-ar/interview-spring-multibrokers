@@ -5,12 +5,7 @@
 ᵇʸ ᴬˡᵉᶠᵘᵉⁿᵗᵉˢ
 ```
 # SPRING | Múltiples Brokers
-<img src="https://img.shields.io/badge/Spring-informational?style=flat-square&logo=spring&logoColor=6db33f&color=ffffff" />
-<img src="https://img.shields.io/badge/Redis-informational?style=flat-square&logo=redis&logoColor=ff4438&color=ffffff" />
-<img src="https://img.shields.io/badge/Kafka-informational?style=flat-square&logo=apachekafka&logoColor=231f20&color=ffffff" />
-<img src="https://img.shields.io/badge/RabbitMQ-informational?style=flat-square&logo=rabbitmq&logoColor=ff6600&color=ffffff" />
-<img src="https://img.shields.io/badge/ActiveMQ-informational?style=flat-square&color=ffffff" />
-<img src="https://img.shields.io/badge/Docker-informational?style=flat-square&logo=docker&logoColor=2496ed&color=ffffff" />
+<img src="https://img.shields.io/badge/Spring-informational?style=flat-square&logo=spring&logoColor=6db33f&color=ffffff" /> <img src="https://img.shields.io/badge/Redis-informational?style=flat-square&logo=redis&logoColor=ff4438&color=ffffff" /> <img src="https://img.shields.io/badge/Kafka-informational?style=flat-square&logo=apachekafka&logoColor=231f20&color=ffffff" /> <img src="https://img.shields.io/badge/RabbitMQ-informational?style=flat-square&logo=rabbitmq&logoColor=ff6600&color=ffffff" /> <img src="https://img.shields.io/badge/ActiveMQ-informational?style=flat-square&color=ffffff" /> <img src="https://img.shields.io/badge/Docker-informational?style=flat-square&logo=docker&logoColor=2496ed&color=ffffff" />
 
 <img src="https://img.shields.io/badge/Dev-Alejandro.Fuentes-informational?style=flat-square&logoColor=white&color=cdcdcd" />
 
@@ -23,57 +18,48 @@ El objetivo principal es servir a un laboratorio práctico (hands-on lab) para e
 
 ```mermaid
 graph TD
-    subgraph "Usuario"
-        U[<br/>🙋‍♂️<br/>Usuario]
-    end
+    %% Definición de Nodos
+    U["<br/>🙋‍♂️<br/>Usuario"]
+    A["<b>Angular Frontend</b><br/>http://localhost:4200"]
+    C["API Controller<br/>(NotificationController)"]
+    S["Servicio<br/>(NotificationService)"]
+    P["Productores de Mensajes<br/>(Templates)"]
+    CON["Consumidores de Mensajes<br/>(@Listeners)"]
+    LOGS["<br/>📝<br/>Consola del Backend"]
+    DB[("🐘<br/>PostgreSQL")]
+    B1{"📦<br/>ActiveMQ"}
+    B2{"🐰<br/>RabbitMQ"}
+    B3{"⚫<br/>Kafka"}
 
     subgraph "Frontend"
-        A[<b>Angular</b><br/>http://localhost:4200]
+        A
     end
 
     subgraph "Backend - Spring Boot"
-        subgraph "Capa API"
-            C(NotificationController)
-        end
-        subgraph "Capa de Servicio"
-            S(NotificationService)
-        end
-        subgraph "Capa de Datos"
-            R(NotificationRepository)
-        end
-        subgraph "Capa de Mensajería (Productores)"
-            P(Productores<br/>JmsTemplate, RabbitTemplate, KafkaTemplate)
-        end
-        subgraph "Capa de Mensajería (Consumidores)"
-            CON(MessageConsumers<br/>@JmsListener, @RabbitListener, @KafkaListener)
-        end
-        subgraph "Salida"
-            LOGS[<br/>📝<br/>Consola del Backend]
-        end
+        C --> S
+        S --> P
+        S --> DB
+        P --> B1
+        P --> B2
+        P --> B3
     end
 
     subgraph "Infraestructura (Docker)"
-        DB[(<br/>🐘<br/>PostgreSQL)]
-        B1{<br/>📦<br/>ActiveMQ}
-        B2{<br/>🐰<br/>RabbitMQ}
-        B3{<br/>⚫<br/>Kafka}
+        DB
+        B1
+        B2
+        B3
     end
-
-    U -- Interactúa con --> A
-    A -- 1. Envía Petición REST (POST) --> C
-    C -- Llama a --> S
-    S -- 2. Guarda en BD --> DB
-    S -- 3. Publica Eventos --> P
-    P -- 3a. Envía a --> B1
-    P -- 3b. Envía a --> B2
-    P -- 3c. Envía a --> B3
-    S -- Responde a --> C
-    C -- Responde OK --> A
-
-    B1 -- 4a. Mensaje recibido --> CON
-    B2 -- 4b. Mensaje recibido --> CON
-    B3 -- 4c. Mensaje recibido --> CON
-    CON -- Imprime en --> LOGS
+    
+    %% Flujo de la Aplicación
+    U -- "Interactúa" --> A
+    A -- "1. Petición POST" --> C
+    
+    B1 -- "4a. Lee de cola" --> CON
+    B2 -- "4b. Lee de cola" --> CON
+    B3 -- "4c. Lee de topic" --> CON
+    
+    CON -- "5. Imprime log" --> LOGS
 ```
 
 ## Subiendo los contenedores Docker
