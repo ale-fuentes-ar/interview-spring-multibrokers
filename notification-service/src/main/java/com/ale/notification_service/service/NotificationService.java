@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.ale.notification_service.model.Notification;
@@ -20,6 +21,7 @@ public class NotificationService {
     @Autowired private JmsTemplate jmsTemplate;
     @Autowired private RabbitTemplate rabbitTemplate;
     @Autowired private KafkaTemplate<String, String> kafkaTemplate;
+    @Autowired private SimpMessagingTemplate websocketTemplate;
 
     @Value("${app.messaging.topic.activemq}") private String activeMqTopic;
     @Value("${app.messaging.topic.rabbitmq}") private String rabbitMqExchange;
@@ -41,6 +43,9 @@ public class NotificationService {
         jmsTemplate.convertAndSend(activeMqTopic, eventMessage);
         rabbitTemplate.convertAndSend(rabbitMqExchange, rabbitMqRoutingKey, eventMessage);
         kafkaTemplate.send(kafkaTopic, eventMessage);
+
+        System.out.println("Nueva notificación enviada: WebSocket /topic/notifications");
+        this.websocketTemplate.convertAndSend("/topic/notifications", savedNotification);
         
         return savedNotification;
     }

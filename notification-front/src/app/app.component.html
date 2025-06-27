@@ -1,24 +1,41 @@
-<div style="padding: 20px; font-family: serif; max-width: 800px; margin: auto">
-  <h1>{{ title }}</h1>
+<div class="app-container">
 
-  <div>
-    <input
-      type="text"
-      name="notification"
-      id="notification"
-      [(ngModel)]="newMessage"
-      placeholder="Escribe tu notificación ..."
-      (keyup.enter)="sendNotification()"
-    />
-    <button (click)="sendNotification()">Enviar notificación</button>
+  <header class="app-header">
+    <h1>{{ title }}</h1>
+    <div class="notification-bell" (click)="resetNotificationCount()">
+      <span>🔔</span>
+      <span class="notification-count" *ngIf="newNotificationCount > 0">
+        {{ newNotificationCount }}
+      </span>
+    </div>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="app-content">
+    <div class="form-container">
+      <input
+        type="text"
+        [(ngModel)]="newMessage"
+        placeholder="Escribe tu notificación aquí..."
+        (keyup.enter)="sendNotification()">
+      <button (click)="sendNotification()">Enviar Notificación</button>
+    </div>
+
+    <h2>Historial de Notificaciones</h2>
+    <ul class="notification-list">
+      <li *ngIf="notifications.length === 0">Aún no hay notificaciones.</li>
+      <li *ngFor="let notification of notifications">
+        <strong>{{ notification.message }}</strong> - <span>Enviado: {{ notification.timestamp | date:'shortTime' }}</span>
+      </li>
+    </ul>
+  </main>
+
+</div>
+
+<!-- Contenedor para las notificaciones "Toast" -->
+<div class="toast-container">
+  <div *ngFor="let toast of activeToasts" class="toast-notification show">
+    <strong>¡Nueva Notificación!</strong>
+    <p>{{ toast.message }}</p>
   </div>
-
-  <h2>Notificaciones enviadas</h2>
-  <ul>
-    <li *ngIf="notifications.length === 0">Aún no hay notificaciones</li>
-    <li *ngFor="let notificacion of notifications">
-      <strong>{{ notificacion.timestamp | date:'short' }}</strong> |
-      <span>{{ notificacion.message }}</span>
-    </li>
-  </ul>
 </div>

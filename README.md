@@ -33,43 +33,49 @@ graph TD
     A["<b>Angular Frontend</b><br/>http://localhost:4200"]
     C["API Controller<br/>(NotificationController)"]
     S["Servicio<br/>(NotificationService)"]
-    P["Productores de Mensajes<br/>(Templates)"]
-    CON["Consumidores de Mensajes<br/>(@Listeners)"]
-    LOGS["<br/>📝<br/>Consola del Backend"]
     DB[("🐘<br/>PostgreSQL")]
+    P["Productores de Mensajes<br/>(Templates)"]
+    WS_Broker["<br/>⚡️<br/>WebSocket Broker<br/>(STOMP en Memoria)"]
     B1{"📦<br/>ActiveMQ"}
     B2{"🐰<br/>RabbitMQ"}
     B3{"⚫<br/>Kafka"}
-
+    CON["Consumidores de Mensajes<br/>(@Listeners)"]
+    LOGS["<br/>📝<br/>Consola del Backend"]
+    
+    %% Agrupación en Subgrafos
     subgraph "Frontend"
         A
     end
 
     subgraph "Backend - Spring Boot"
         C --> S
-        S --> P
         S --> DB
-        P --> B1
-        P --> B2
-        P --> B3
+        S -- "3. Publica Eventos" --> P
+        P -- "3a. Envía a cola" --> B1
+        P -- "3b. Envía a cola" --> B2
+        P -- "3c. Envía a topic" --> B3
+        B1 & B2 & B3 --> CON
+        CON -- "Imprime Logs" --> LOGS
+        
+        S -- "4. Empuja a WebSocket" --> WS_Broker
     end
 
-    subgraph "Infraestructura (Docker)"
+    subgraph "Infraestructura (Docker & En Memoria)"
         DB
         B1
         B2
         B3
+        WS_Broker
     end
     
     %% Flujo de la Aplicación
     U -- "Interactúa" --> A
-    A -- "1. Petición POST" --> C
     
-    B1 -- "4a. Lee de cola" --> CON
-    B2 -- "4b. Lee de cola" --> CON
-    B3 -- "4c. Lee de topic" --> CON
+    A -- "1. Petición POST REST" --> C
+    C -- "2. Responde 200 OK" --> A
     
-    CON -- "5. Imprime log" --> LOGS
+    A <-.->|Establece Conexión WebSocket| WS_Broker
+    WS_Broker -- "5. Notificación en Tiempo Real" --> A
 ```
 
 
