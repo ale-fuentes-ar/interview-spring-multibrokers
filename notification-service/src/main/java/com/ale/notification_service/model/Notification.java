@@ -1,5 +1,6 @@
 package com.ale.notification_service.model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
@@ -10,7 +11,9 @@ import lombok.Data;
 
 @Entity
 @Data
-public class Notification {
+public class Notification implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

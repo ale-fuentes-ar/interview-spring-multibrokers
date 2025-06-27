@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -17,28 +19,42 @@ import com.ale.notification_service.repository.NotificationRepository;
 @Service
 public class NotificationService {
 
-    @Autowired private NotificationRepository repository;
-    @Autowired private JmsTemplate jmsTemplate;
-    @Autowired private RabbitTemplate rabbitTemplate;
-    @Autowired private KafkaTemplate<String, String> kafkaTemplate;
-    @Autowired private SimpMessagingTemplate websocketTemplate;
+    @Autowired
+    private NotificationRepository repository;
+    @Autowired
+    private JmsTemplate jmsTemplate;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
+    @Autowired
+    private SimpMessagingTemplate websocketTemplate;
 
-    @Value("${app.messaging.topic.activemq}") private String activeMqTopic;
-    @Value("${app.messaging.topic.rabbitmq}") private String rabbitMqExchange;
-    @Value("${app.messaging.routingkey.rabbitmq}") private String rabbitMqRoutingKey;
-    @Value("${app.messaging.topic.kafka}") private String kafkaTopic;
+    @Value("${app.messaging.topic.activemq}")
+    private String activeMqTopic;
+    @Value("${app.messaging.topic.rabbitmq}")
+    private String rabbitMqExchange;
+    @Value("${app.messaging.routingkey.rabbitmq}")
+    private String rabbitMqRoutingKey;
+    @Value("${app.messaging.topic.kafka}")
+    private String kafkaTopic;
 
-    public List<Notification> getAllNotifications(){
+    @Cacheable("notifications")
+    public List<Notification> getAllNotifications() {
         return repository.findAll();
     }
 
-    public Notification createNotification(String message){
+    @CacheEvict(value = "notifications", allEntries = true)
+    public Notification createNotification(String message) {
+
+        System.out.println("> > > INVALIDANDO LA CACHÉ 'notifications'...");
+
         Notification notification = new Notification();
         notification.setMessage(message);
         notification.setTimestamp(LocalDateTime.now());
 
         Notification savedNotification = repository.save(notification);
-        
+
         String eventMessage = String.format("%s: %s", "Nueva notificación creada: ", savedNotification.getMessage());
         jmsTemplate.convertAndSend(activeMqTopic, eventMessage);
         rabbitTemplate.convertAndSend(rabbitMqExchange, rabbitMqRoutingKey, eventMessage);
@@ -46,8 +62,8 @@ public class NotificationService {
 
         System.out.println("Nueva notificación enviada: WebSocket /topic/notifications");
         this.websocketTemplate.convertAndSend("/topic/notifications", savedNotification);
-        
+
         return savedNotification;
     }
-    
+
 }

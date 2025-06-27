@@ -5,7 +5,8 @@
 ᵇʸ ᴬˡᵉᶠᵘᵉⁿᵗᵉˢ
 ```
 # SPRING | Múltiples Brokers
-<img src="https://img.shields.io/badge/Spring-informational?style=flat-square&logo=spring&logoColor=6db33f&color=ffffff" /> <img src="https://img.shields.io/badge/Mav-informational?style=flat-square&logo=apachemaven&logoColor=c71a36&color=ffffff" /> <img src="https://img.shields.io/badge/Redis-informational?style=flat-square&logo=redis&logoColor=ff4438&color=ffffff" /> <img src="https://img.shields.io/badge/Kafka-informational?style=flat-square&logo=apachekafka&logoColor=231f20&color=ffffff" /> <img src="https://img.shields.io/badge/RabbitMQ-informational?style=flat-square&logo=rabbitmq&logoColor=ff6600&color=ffffff" /> <img src="https://img.shields.io/badge/ActiveMQ-informational?style=flat-square&color=ffffff" /> <img src="https://img.shields.io/badge/Docker-informational?style=flat-square&logo=docker&logoColor=2496ed&color=ffffff" />
+<img src="https://img.shields.io/badge/Docker-informational?style=flat-square&logo=docker&logoColor=2496ed&color=ffffff" /> <img src="https://img.shields.io/badge/Spring-informational?style=flat-square&logo=spring&logoColor=6db33f&color=ffffff" /> <img src="https://img.shields.io/badge/Maven-informational?style=flat-square&logo=apachemaven&logoColor=c71a36&color=ffffff" /> |
+<img src="https://img.shields.io/badge/Kafka-informational?style=flat-square&logo=apachekafka&logoColor=231f20&color=ffffff" /> <img src="https://img.shields.io/badge/RabbitMQ-informational?style=flat-square&logo=rabbitmq&logoColor=ff6600&color=ffffff" /> <img src="https://img.shields.io/badge/ActiveMQ-informational?style=flat-square&color=ffffff" /> | <img src="https://img.shields.io/badge/Redis-informational?style=flat-square&logo=redis&logoColor=ff4438&color=ffffff" /> <img src="https://img.shields.io/badge/PostgreSQL-informational?style=flat-square&logo=postgresql&logoColor=4160e1&color=ffffff" /> <img src="https://img.shields.io/badge/WebSocket-informational?style=flat-square&color=ffffff" /> 
 
 <img src="https://img.shields.io/badge/Dev-Alejandro.Fuentes-informational?style=flat-square&logoColor=white&color=cdcdcd" />
 
@@ -126,6 +127,67 @@ Siguientes Pasos (Para seguir mejorando)
 
 - [ ] Seguridad: Añadir Spring Security y JWT para proteger tus endpoints.
 - [x] WebSockets: En lugar de recargar la lista de notificaciones manualmente, podrías usar WebSockets (con STOMP sobre RabbitMQ/ActiveMQ) para que las notificaciones aparezcan en tiempo real en el frontend.
+- [x] Redis: Incluir cache.
 - [ ] Manejo de Errores: Implementar un manejo de errores más robusto tanto en el frontend como en el backend.
 - [ ] Tests: Escribir tests unitarios y de integración.
 - [ ] Patrones de Mensajería más complejos: Investigar patrones como Request/Reply o Fanout.
+
+
+### WebSocket | Replicar en tiempo real
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend (Angular)
+    participant BE as Backend (Spring Boot)
+    
+    Note over FE,BE: Fase 1: Establecimiento de la Conexión
+    FE->>BE: 1. Petición HTTP para iniciar conexión WebSocket (/ws)
+    BE-->>FE: 2. Conexión WebSocket establecida (canal abierto)
+
+    Note over FE,BE: Fase 2: Suscripción a un Tópico
+    FE->>BE: 3. Envía mensaje STOMP: SUBSCRIBE a /topic/notifications
+    Note right of BE: El Backend registra la suscripción del cliente.
+    
+    %% -- Un evento ocurre en otro momento -- %%
+    
+    participant User2 as Otro Usuario
+    participant FE2 as Otro Frontend
+    
+    Note over FE2,BE: Fase 3: Un evento dispara la notificación
+    User2->>FE2: 4. Envía una nueva notificación (vía API REST)
+    FE2->>BE: 5. Petición POST /api/notifications
+    
+    BE->>BE: 6. Procesa la petición (Guarda en BD, etc.)
+    
+    Note over FE,BE: Fase 4: El Servidor "Empuja" (Push) la Notificación
+    BE-->>FE: 7. PUSH! Envía mensaje STOMP con la nueva<br/>notificación a /topic/notifications
+    
+    Note left of FE: El Frontend recibe la notificación y<br/>actualiza la UI en tiempo real.
+```
+
+### Redis | Cache
+
+Permite aliviar el acesso al banco de datos, almacenando consultas previas en una region de cache.
+
+```mermaid
+sequenceDiagram
+    participant FE as Frontend (Angular)
+    participant BE as Backend (Spring Boot)
+    participant RC as Cache (Redis)
+    participant DB as Base de Datos (PostgreSQL)
+
+    FE->>BE: 1. Petición GET /api/notifications
+    
+    BE->>RC: 2. ¿Existe la clave 'notifications'?
+    
+    alt Acierto de Caché (Cache Hit)
+        RC-->>BE: 3a. Sí, aquí están los datos.
+        BE-->>FE: 4a. Devuelve datos cacheados (¡Rápido!)
+    else Fallo de Caché (Cache Miss)
+        RC-->>BE: 3b. No, no tengo esos datos.
+        BE->>DB: 4b. Consulta a la base de datos (SELECT *)
+        DB-->>BE: 5b. Devuelve la lista de notificaciones.
+        BE->>RC: 6b. Guarda el resultado en la caché.
+        BE-->>FE: 7b. Devuelve datos desde la BD.
+    end
+```
