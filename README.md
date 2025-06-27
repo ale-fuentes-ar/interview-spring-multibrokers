@@ -118,3 +118,14 @@ ng serve
 ```bash
 docker-compose down
 ```
+
+
+## Mejorias pendientes
+
+Siguientes Pasos (Para seguir mejorando)
+
+- [ ] Seguridad: Añadir Spring Security y JWT para proteger tus endpoints.
+- [x] WebSockets: En lugar de recargar la lista de notificaciones manualmente, podrías usar WebSockets (con STOMP sobre RabbitMQ/ActiveMQ) para que las notificaciones aparezcan en tiempo real en el frontend.
+- [ ] Manejo de Errores: Implementar un manejo de errores más robusto tanto en el frontend como en el backend.
+- [ ] Tests: Escribir tests unitarios y de integración.
+- [ ] Patrones de Mensajería más complejos: Investigar patrones como Request/Reply o Fanout.
