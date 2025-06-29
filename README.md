@@ -125,13 +125,60 @@ docker-compose down
 
 Siguientes Pasos (Para seguir mejorando)
 
-- [ ] Seguridad: Añadir Spring Security y JWT para proteger tus endpoints.
+- [x] Seguridad: Añadir Spring Security y JWT para proteger tus endpoints.
 - [x] WebSockets: En lugar de recargar la lista de notificaciones manualmente, podrías usar WebSockets (con STOMP sobre RabbitMQ/ActiveMQ) para que las notificaciones aparezcan en tiempo real en el frontend.
 - [x] Redis: Incluir cache.
 - [ ] Manejo de Errores: Implementar un manejo de errores más robusto tanto en el frontend como en el backend.
 - [ ] Tests: Escribir tests unitarios y de integración.
 - [ ] Patrones de Mensajería más complejos: Investigar patrones como Request/Reply o Fanout.
 
+### Spring Security | JWT para proteger mis endpoints
+
+```mermaid
+graph TD
+    subgraph "Cliente (Navegador)"
+        A[<b>Angular App</b>]
+    end
+
+    subgraph "Backend (Spring Boot)"
+        direction LR
+        
+        subgraph "Endpoints Públicos"
+            EP["/api/auth/**<br/>(Login/Registro)"]
+        end
+
+        subgraph "Cadena de Filtros de Spring Security"
+            F1(<b>Filtro CORS</b><br/>Permite el origen) --> F2(<b>Filtro JWT</b><br/>Lee y valida el token) --> F3(<b>Filtro de Autorización</b><br/>Verifica permisos)
+        end
+        
+        subgraph "Endpoints Protegidos"
+            EC[<b>/api/notifications/**</b><br/>Requiere token válido]
+        end
+
+        subgraph "Lógica de Negocio"
+            AS(AuthenticationService)
+            NS(NotificationService)
+        end
+    end
+
+    %% --- Flujo de Autenticación (Público) ---
+    A -- "1. Petición a endpoint público" --> EP
+    EP -- "2. Llama al servicio de Auth" --> AS
+    AS -- "3. Genera Token JWT" --> A
+
+    %% --- Flujo de Petición Protegida ---
+    A -- "4. Petición con Token JWT" --> F1
+    F2 -- "Token OK" --> F3
+    F3 -- "Permiso OK" --> EC
+    EC -- "5. Llama al servicio de Notif." --> NS
+    NS -- "6. Devuelve datos" --> A
+
+    %% --- Flujo de Petición Rechazada ---
+    style F4 fill:#f77,stroke:#c33,stroke-width:2px
+    A -- "Petición SIN/CON Token Inválido" --> F2
+    F2 -- "Token Inválido o Ausente" --> F4(Respuesta 401/403<br/>ACCESO DENEGADO)
+    F4 --> A
+```
 
 ### WebSocket | Replicar en tiempo real
 

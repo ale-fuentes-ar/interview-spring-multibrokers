@@ -1,6 +1,15 @@
 server:
   port: 8080
 
+# Security
+application:
+  security:
+    jwt:
+      # openssl rand -base64 64
+      # 2ZLEJVYhzztIEdd8JfysPg==
+      secret-key: 9Mt64QkdsWxm1MKjIKb9G/9ea5R2zeqR0jZVJ7aqQgEbccCNN4HopIwUhHmhzWPB
+      expiration: 86400000
+
 spring:
 # application
   application:
