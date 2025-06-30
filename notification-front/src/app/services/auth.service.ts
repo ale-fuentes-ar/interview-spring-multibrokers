@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { catchError, Observable, tap, throwError } from 'rxjs';
 
 interface AuthResponse {
   token: string;
@@ -15,17 +15,19 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  register(credentials: any): Observable<AuthResponse>{
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, credentials)
-    .pipe(
-      tap((response: AuthResponse) => this.saveToken(response.token))
-    );
+  register(credentials: any): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/register`, credentials)
+      .pipe(tap((response: AuthResponse) => this.saveToken(response.token)));
   }
 
   login(credentials: any): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/authenticate`, credentials).pipe(
-      tap((response: AuthResponse) => this.saveToken(response.token))
-    )
+    return this.http
+      .post<AuthResponse>(`${this.apiUrl}/authenticate`, credentials)
+      .pipe(
+        tap((response: AuthResponse) => this.saveToken(response.token)),
+        catchError(this.handleError)
+      );
   }
 
   saveToken(token: string): void {
@@ -43,5 +45,16 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem('jwt_token');
     this.router.navigate(['/login']);
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'Ocurrió un error desconocido.';
+    if (error.error && typeof error.error.message === 'string') {
+      errorMessage = error.error.message;
+    } else if (error.statusText) {
+      errorMessage = `Error: ${error.statusText}`;
+    }
+
+    return throwError(() => new Error(errorMessage));
   }
 }

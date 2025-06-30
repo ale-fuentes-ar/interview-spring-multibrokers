@@ -238,3 +238,10 @@ sequenceDiagram
         BE-->>FE: 7b. Devuelve datos desde la BD.
     end
 ```
+
+### Manejo de errores
+
+El objetivo es:
+- Centralizar el manejo de excepciones en el backend.
+- Devolver siempre una respuesta JSON clara y consistente cuando ocurra un error, con un código de estado HTTP apropiado.
+- Hacer que el frontend pueda leer esta respuesta y mostrar un mensaje más amigable al usuario.

@@ -1,0 +1,32 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="card-header">
+      <div class="logo">🔔</div>
+      <h2>Iniciar Sesión</h2>
+      <p>Bienvenido de nuevo</p>
+    </div>
+
+    <form (ngSubmit)="onLogin()" class="login-form">
+      <div class="input-group">
+        <label for="username">Usuario</label>
+        <input id="username" type="text" [(ngModel)]="username" name="username" required>
+      </div>
+
+      <div class="input-group">
+        <label for="password">Contraseña</label>
+        <input id="password" type="password" [(ngModel)]="password" name="password" required>
+      </div>
+
+      <button type="submit" class="login-button">Entrar</button>
+
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+    </form>
+
+    <div class="card-footer">
+      <span>¿No tienes una cuenta?</span>
+      <a routerLink="/register">Regístrate aquí</a>
+    </div>
+  </div>
+</div>
