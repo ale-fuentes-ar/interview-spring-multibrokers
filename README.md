@@ -128,7 +128,7 @@ Siguientes Pasos (Para seguir mejorando)
 - [x] Seguridad: Añadir Spring Security y JWT para proteger tus endpoints.
 - [x] WebSockets: En lugar de recargar la lista de notificaciones manualmente, podrías usar WebSockets (con STOMP sobre RabbitMQ/ActiveMQ) para que las notificaciones aparezcan en tiempo real en el frontend.
 - [x] Redis: Incluir cache.
-- [ ] Manejo de Errores: Implementar un manejo de errores más robusto tanto en el frontend como en el backend.
+- [x] Manejo de Errores: Implementar un manejo de errores más robusto tanto en el frontend como en el backend.
 - [ ] Tests: Escribir tests unitarios y de integración.
 - [ ] Patrones de Mensajería más complejos: Investigar patrones como Request/Reply o Fanout.
 
@@ -245,3 +245,11 @@ El objetivo es:
 - Centralizar el manejo de excepciones en el backend.
 - Devolver siempre una respuesta JSON clara y consistente cuando ocurra un error, con un código de estado HTTP apropiado.
 - Hacer que el frontend pueda leer esta respuesta y mostrar un mensaje más amigable al usuario.
+
+### Tests | Escribir tests unitarios y de integración
+
+Importancia sobre el uso de testes:
+
+- Construir una Red de Seguridad: Los tests verifican que el código que ya hemos escrito funciona como se espera. Esto nos da una "red de seguridad" que nos permite añadir nuevas funcionalidades (como los patrones de mensajería complejos) o refactorizar el código existente con la confianza de que no hemos roto nada.
+- Documentación Viva: Un buen conjunto de tests sirve como documentación. Cualquiera puede leerlos y entender qué se espera que haga cada parte de la aplicación.
+- Facilita la Depuración: Cuando un test falla, te señala exactamente qué parte del código se ha roto, haciendo que encontrar y arreglar bugs sea mucho más rápido.
