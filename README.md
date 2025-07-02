@@ -129,7 +129,8 @@ Siguientes Pasos (Para seguir mejorando)
 - [x] WebSockets: En lugar de recargar la lista de notificaciones manualmente, podrías usar WebSockets (con STOMP sobre RabbitMQ/ActiveMQ) para que las notificaciones aparezcan en tiempo real en el frontend.
 - [x] Redis: Incluir cache.
 - [x] Manejo de Errores: Implementar un manejo de errores más robusto tanto en el frontend como en el backend.
-- [ ] Tests: Escribir tests unitarios y de integración.
+- [x] Tests: Escribir tests unitarios y de integración.
+- [x] Swagger: Documentar API. 
 - [ ] Patrones de Mensajería más complejos: Investigar patrones como Request/Reply o Fanout.
 
 ### Spring Security | JWT para proteger mis endpoints
@@ -253,3 +254,73 @@ Importancia sobre el uso de testes:
 - Construir una Red de Seguridad: Los tests verifican que el código que ya hemos escrito funciona como se espera. Esto nos da una "red de seguridad" que nos permite añadir nuevas funcionalidades (como los patrones de mensajería complejos) o refactorizar el código existente con la confianza de que no hemos roto nada.
 - Documentación Viva: Un buen conjunto de tests sirve como documentación. Cualquiera puede leerlos y entender qué se espera que haga cada parte de la aplicación.
 - Facilita la Depuración: Cuando un test falla, te señala exactamente qué parte del código se ha roto, haciendo que encontrar y arreglar bugs sea mucho más rápido.
+
+
+### Swagger | Documentación de las API
+
+**Modelo conceptual** sobre que hace el `swagger`:
+
+```mermaid
+graph TD
+    subgraph "Desarrollador Backend"
+        A["<b>Código Spring Boot</b><br>@RestController, @GetMapping, etc."]
+    end
+
+    subgraph "Proceso de Build/Arranque"
+        B(<b>Librería springdoc-openapi</b>)
+    end
+    
+    subgraph "Aplicación en Ejecución"
+        C{"<b>Especificación OpenAPI</b><br>Generada en JSON<br><i>/v3/api-docs</i>"}
+        D["<b>Swagger UI</b><br>Página web interactiva<br><i>/swagger-ui.html</i>"]
+    end
+
+    subgraph "Usuarios de la API"
+        E["Desarrollador Frontend"]
+        F["Tú mismo (Tester)"]
+    end
+
+    A -- "Es escaneado por" --> B
+    B -- "Genera automáticamente" --> C
+    C -- "Es renderizada por" --> D
+    
+    D -- "Es consultada y usada por" --> E
+    D -- "Es usada para probar por" --> F
+```
+
+**Flujo de prueba con seguridad activa**, para la comprensión de como utilizar el teste en endpoints protegidos:
+
+```mermaid
+sequenceDiagram
+    participant Dev as Desarrollador/Tester
+    participant UI as Swagger UI (Navegador)
+    participant BE as Backend (API)
+
+    Note over Dev,BE: Fase 1: Obtener el Token de Autenticación
+
+    Dev->>UI: 1. Ejecuta POST /api/auth/authenticate (con usuario/pass)
+    UI->>BE: 2. Envía la petición de login
+    BE-->>UI: 3. Devuelve el Token JWT
+    UI-->>Dev: 4. Muestra el token en la respuesta
+    
+    Dev->>Dev: 5. Copia el token JWT
+
+    Note over Dev,UI: Fase 2: "Iniciar Sesión" en Swagger UI
+
+    Dev->>UI: 6. Haz clic en "Authorize"
+    Dev->>UI: 7. Pega el token en el campo "Bearer Auth"
+    Note right of UI: Swagger UI ahora guardará este<br>token para futuras peticiones.
+
+    %% --- Fase 3: Probar un Endpoint Protegido ---
+    
+    Note over Dev,BE: Fase 3: Probar un Endpoint Protegido
+
+    Dev->>UI: 8. Ejecuta GET /api/notifications
+    
+    UI->>BE: 9. Envía la petición GET, pero ahora incluye<br>la cabecera "Authorization: Bearer <token>"
+    
+    Note right of BE: Spring Security intercepta, valida el token y<br>permite el acceso.
+    
+    BE-->>UI: 10. Devuelve la respuesta 200 OK con los datos
+    UI-->>Dev: 11. Muestra la respuesta exitosa
+```
